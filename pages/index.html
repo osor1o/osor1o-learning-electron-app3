@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-sacale=1,, shrink-to-fit=no" />
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+    <body>
+        <h1 class="h1 text-center">Stopwatch</h1>
+        <div id="chronoExample">
+            <h2 class="values h2 text-center">00:00:00</h2>
+            <div class="text-center">
+                <button class="startButton btn btn-primary">Start</button>
+                <button class="pauseButton btn btn-info">Pause</button>
+                <button class="stopButton btn btn-warning">Stop</button>
+                <button class="resetButton btn btn-danger">Reset</button>
+            </div>
+        </div>
+        <script>
+            Notification.requestPermission();
+            const {Timer} = require('easytimer.js');
+            const timer = new Timer();
+            const target25 = new Timer();
+            const {ipcRenderer} = require("electron");
+
+            document.querySelector('#chronoExample .startButton').addEventListener('click', 
+                function () {
+                    timer.start();
+                    target25.start({precision: "seconds", target: {seconds: 25}});
+                }
+            );
+            document.querySelector('#chronoExample .pauseButton').addEventListener('click',
+                function () {
+                    timer.pause();
+                    target25.pause();
+                }
+            );
+            document.querySelector('#chronoExample .stopButton').addEventListener('click',
+                function () {
+                    timer.stop();
+                    target25.stop();
+                }
+            );
+            document.querySelector('#chronoExample .resetButton').addEventListener('click',
+                function () {
+                    timer.reset();
+                    target25.reset();
+                }
+            );
+
+            timer.addEventListener('secondsUpdated', () => timeUpdate());
+            timer.addEventListener('started', () => timeUpdate());
+            timer.addEventListener('reset', () => timeUpdate());
+
+            target25.addEventListener("targetAchieved", (event) => {
+                let myNotification = new Notification("Stopwatch", {
+                    body: "25 seconds!",
+                });
+                target25.start({precision: "seconds", target: {seconds: 25}});
+            });
+
+            function timeUpdate() {
+                const timeUpdate = timer.getTimeValues().toString();
+                document.querySelector('#chronoExample .values').innerHTML = timeUpdate;
+                ipcRenderer.send("timeUpdate", timeUpdate);
+            }
+        </script>
+    </body>
+</html>
